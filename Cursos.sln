@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursosUniversitarios_API", "InventarioLab\CursosUniversitarios_API.csproj", "{7FC165DE-0511-49DA-82ED-FBDED01372FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursosUniversitarios_API", "CursosUniversitarios_API\CursosUniversitarios_API.csproj", "{7FC165DE-0511-49DA-82ED-FBDED01372FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursosUniversitarios_Console", "InventarioLab_Console\CursosUniversitarios_Console.csproj", "{EF868012-61CF-4959-873D-565769206783}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursosUniversitarios_Console", "CursosUniversitarios_Console\CursosUniversitarios_Console.csproj", "{EF868012-61CF-4959-873D-565769206783}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
