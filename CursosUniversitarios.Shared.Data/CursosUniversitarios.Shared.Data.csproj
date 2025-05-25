@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CursosUniversitarios.Shared.Data\CursosUniversitarios.Shared.Data.csproj" />
     <ProjectReference Include="..\CursosUniversitarios.Shared.Models\CursosUniversitarios.Shared.Models.csproj" />
   </ItemGroup>
 

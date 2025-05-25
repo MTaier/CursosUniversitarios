@@ -4,16 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InventarioLab_Console
+namespace CursosUniversitarios_Console
 {
-    internal class Course
+    public class Course
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public int TotalHours { get; set; }
         // 1:N - Um curso possui várias disciplinas
-        public List<Subject> Subjects { get; set; } = new();
+        public virtual ICollection<Subject> Subjects { get; set; } = new List<Subject>();
         // N:N - Um curso possui vários professores
-        public List<Professor> Professors { get; set; } = new();
+        public virtual ICollection<Professor> Professors { get; set; } = new List<Professor>();
+
+        public Course(string name, int totalHours)
+        {
+            Name = name;
+            TotalHours = totalHours;
+        }
 
         public Course(string name)
         {
@@ -47,8 +54,6 @@ namespace InventarioLab_Console
         {
             return $"Curso: {Name} (ID: {Id})";
         }
-
-
 
     }
 }

@@ -4,15 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InventarioLab_Console
+namespace CursosUniversitarios_Console
 {
-    internal class Subject
+    public class Subject
     {
 
         public int Id { get; set; }
         public string Name { get; set; }
+        public int Credits { get; set; }
+        public int Semester { get; set; }
+
         // 1:N - Referência ao curso ao qual pertence
-        public Course Course { get; set; }
+        public virtual Course Course { get; set; }
 
         public Subject(string name)
         {

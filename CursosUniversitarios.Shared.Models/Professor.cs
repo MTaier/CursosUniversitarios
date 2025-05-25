@@ -4,14 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InventarioLab_Console
+namespace CursosUniversitarios_Console
 {
-    internal class Professor
+    public class Professor
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Email { get; set; }   
+        public string PhoneNumber { get; set; }
         // N:N - Um professor pode estar em vários cursos
-        public List<Course> Courses { get; set; } = new();
+        public virtual List<Course> Courses { get; set; } = new();
 
         public Professor(string name)
         {
@@ -40,9 +42,6 @@ namespace InventarioLab_Console
         {
             return $"Professor: {Name} (ID: {Id})";
         }
-
-
-
 
     }
 }

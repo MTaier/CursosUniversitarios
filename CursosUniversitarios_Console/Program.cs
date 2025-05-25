@@ -1,10 +1,13 @@
-﻿using InventarioLab_Console;
+﻿using CursosUniversitarios_Console;
+using CursosUniversitarios.Shared.Data.DB;
 
 internal class Program
 {
-    public static Dictionary<string, Course> CourseList = new();
     private static void Main(string[] args)
     {
+
+        var CourseDAL = new DAL<Course>();
+
         bool exit = false;
         while (!exit)
         {
@@ -57,156 +60,164 @@ internal class Program
             }
         }
 
-    }
-
-    private static void ShowProfessors()
-    {
-        Console.Clear();
-        Console.WriteLine("Mostrar professores de um curso");
-
-        Console.Write("Nome do curso: ");
-        string courseName = Console.ReadLine();
-
-        if (CourseList.ContainsKey(courseName))
+        void RegisterCourse()
         {
-            var professors = CourseList[courseName].Professors;
+            Console.Clear();
+            Console.WriteLine("Registro de novo curso");
+            Console.Write("Nome do curso: ");
+            string name = Console.ReadLine().Trim();
 
-            if (professors.Count == 0)
+            var existing = CourseDAL.ReadBy(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
             {
-                Console.WriteLine("Nenhum professor cadastrado para este curso.");
+                Console.WriteLine($"O curso '{name}' já está registrado.");
             }
             else
             {
-                Console.WriteLine($"Professores do curso '{courseName}':");
-                foreach (var p in professors)
-                {
-                    Console.WriteLine($"- {p.Name}");
-                }
+                Course c = new Course(name);
+                CourseDAL.Create(c);
+                Console.WriteLine($"Curso '{name}' registrado com sucesso!");
             }
-        }
-        else
-        {
-            Console.WriteLine("Curso não encontrado.");
+            Console.ReadKey();
         }
 
-        Console.ReadKey();
-    }
 
-    private static void ShowSubjects()
-    {
-        Console.Clear();
-        Console.WriteLine("Mostrar disciplinas de um curso");
-
-        Console.Write("Nome do curso: ");
-        string courseName = Console.ReadLine();
-
-        if (CourseList.ContainsKey(courseName))
+        void RegisterSubject()
         {
-            var subjects = CourseList[courseName].Subjects;
+            Console.Clear();
+            Console.WriteLine("Adicionar disciplina a um curso");
+            Console.Write("Nome do curso: ");
+            string courseName = Console.ReadLine();
 
-            if (subjects.Count == 0)
+            var targetCourse = CourseDAL.ReadBy(c => c.Name.Equals(courseName, StringComparison.OrdinalIgnoreCase));
+            if (targetCourse != null)
             {
-                Console.WriteLine("Nenhuma disciplina cadastrada para este curso.");
+                Console.Write("Nome da disciplina: ");
+                string subjectName = Console.ReadLine();
+                targetCourse.AddSubject(new Subject(subjectName));
+                CourseDAL.Update(targetCourse);
+                Console.WriteLine($"Disciplina '{subjectName}' adicionada ao curso '{courseName}'.");
             }
             else
             {
-                Console.WriteLine($"Disciplinas do curso '{courseName}':");
-                foreach (var s in subjects)
+                Console.WriteLine("Curso não encontrado.");
+            }
+            Console.ReadKey();
+        }
+
+
+        void RegisterProfessor()
+        {
+            Console.Clear();
+            Console.WriteLine("Registrar professor em um curso");
+            Console.Write("Nome do curso: ");
+            string courseName = Console.ReadLine();
+
+            var targetCourse = CourseDAL.ReadBy(c => c.Name.Equals(courseName, StringComparison.OrdinalIgnoreCase));
+            if (targetCourse != null)
+            {
+                Console.Write("Nome do professor: ");
+                string professorName = Console.ReadLine();
+                Professor newProfessor = new(professorName);
+
+                targetCourse.AddProfessor(newProfessor);
+                newProfessor.AddCourse(targetCourse);
+
+                CourseDAL.Update(targetCourse);
+                Console.WriteLine($"Professor '{professorName}' adicionado ao curso '{courseName}'.");
+            }
+            else
+            {
+                Console.WriteLine("Curso não encontrado.");
+            }
+            Console.ReadKey();
+        }
+
+
+        void ShowCourses()
+        {
+            Console.Clear();
+            Console.WriteLine("Cursos disponíveis:\n");
+
+            var courses = CourseDAL.Read();
+            if (courses.Count() == 0)
+            {
+                Console.WriteLine("Nenhum curso cadastrado.");
+            }
+            else
+            {
+                foreach (var course in courses)
                 {
-                    Console.WriteLine($"- {s.Name}");
+                    Console.WriteLine($"- {course.Name}");
                 }
             }
-        }
-        else
-        {
-            Console.WriteLine("Curso não encontrado.");
+
+            Console.ReadKey();
         }
 
-        Console.ReadKey();
-    }
 
-    private static void ShowCourses()
-    {
-        Console.Clear();
-        Console.WriteLine("Cursos disponíveis:\n");
+        void ShowSubjects()
+        {
+            Console.Clear();
+            Console.WriteLine("Mostrar disciplinas de um curso");
+            Console.Write("Nome do curso: ");
+            string courseName = Console.ReadLine();
 
-        if (CourseList.Count == 0)
-        {
-            Console.WriteLine("Nenhum curso cadastrado.");
-        }
-        else
-        {
-            foreach (var course in CourseList.Values)
+            var targetCourse = CourseDAL.ReadBy(c => c.Name.Equals(courseName, StringComparison.OrdinalIgnoreCase));
+            if (targetCourse != null)
             {
-                Console.WriteLine($"- {course.Name}");
+                if (targetCourse.Subjects.Count == 0)
+                {
+                    Console.WriteLine("Nenhuma disciplina cadastrada.");
+                }
+                else
+                {
+                    Console.WriteLine($"Disciplinas do curso '{courseName}':");
+                    foreach (var s in targetCourse.Subjects)
+                    {
+                        Console.WriteLine($"- {s.Name}");
+                    }
+                }
             }
+            else
+            {
+                Console.WriteLine("Curso não encontrado.");
+            }
+            Console.ReadKey();
         }
 
-        Console.ReadKey();
+
+        void ShowProfessors()
+        {
+            Console.Clear();
+            Console.WriteLine("Mostrar professores de um curso");
+            Console.Write("Nome do curso: ");
+            string courseName = Console.ReadLine();
+
+            var targetCourse = CourseDAL.ReadBy(c => c.Name.Equals(courseName, StringComparison.OrdinalIgnoreCase));
+            if (targetCourse != null)
+            {
+                if (targetCourse.Professors.Count == 0)
+                {
+                    Console.WriteLine("Nenhum professor cadastrado.");
+                }
+                else
+                {
+                    Console.WriteLine($"Professores do curso '{courseName}':");
+                    foreach (var p in targetCourse.Professors)
+                    {
+                        Console.WriteLine($"- {p.Name}");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Curso não encontrado.");
+            }
+            Console.ReadKey();
+        }
+
+
     }
 
-    private static void RegisterProfessor()
-    {
-        Console.Clear();
-        Console.WriteLine("Adicionar disciplina a um curso");
-        Console.Write("Nome do curso: ");
-        string courseName = Console.ReadLine();
-
-        if (CourseList.ContainsKey(courseName))
-        {
-            Console.Write("Nome do professor: ");
-            string professorName = Console.ReadLine();
-            Professor newProfessor = new(professorName);
-            CourseList[courseName].AddProfessor(newProfessor);
-            newProfessor.AddCourse(CourseList[courseName]);
-            Console.WriteLine($"Disciplina '{professorName}' adicionada ao curso '{courseName}'.");
-        }
-        else
-        {
-            Console.WriteLine("Curso não encontrado.");
-        }
-        Console.ReadKey();
-    }
-
-    private static void RegisterSubject()
-    {
-        Console.Clear();
-        Console.WriteLine("Adicionar disciplina a um curso");
-        Console.Write("Nome do curso: ");
-        string courseName = Console.ReadLine();
-
-        if (CourseList.ContainsKey(courseName))
-        {
-            Console.Write("Nome da disciplina: ");
-            string subjectName = Console.ReadLine();
-            Subject newSubject = new Subject(subjectName);
-            CourseList[courseName].AddSubject(newSubject);
-            Console.WriteLine($"Disciplina '{subjectName}' adicionada ao curso '{courseName}'.");
-        }
-        else
-        {
-            Console.WriteLine("Curso não encontrado.");
-        }
-        Console.ReadKey();
-    }
-
-    private static void RegisterCourse()
-    {
-        Console.Clear();
-        Console.WriteLine("Registro de novo curso");
-        Console.Write("Nome do curso: ");
-        string name = Console.ReadLine().Trim().ToLower();
-        if (CourseList.ContainsKey(name))
-        {
-            Console.WriteLine($"O curso '{name}' já está registrado.");
-        }
-        else
-        {
-            Course c = new Course(name);
-            CourseList.Add(name, c);
-            Console.WriteLine($"Curso '{name}' registrado com sucesso!");
-        }
-    }
 }
-
-    
