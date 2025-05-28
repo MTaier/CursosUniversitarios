@@ -15,9 +15,11 @@ namespace CursosUniversitarios_Console
         // N:N - Um professor pode estar em vários cursos
         public virtual List<Course> Courses { get; set; } = new();
 
-        public Professor(string name)
+        public Professor(string name, string email, string phoneNumber)
         {
             Name = name;
+            Email = email;
+            PhoneNumber = phoneNumber;
         }
 
         public void AddCourse(Course course)

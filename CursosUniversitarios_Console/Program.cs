@@ -66,6 +66,8 @@ internal class Program
             Console.WriteLine("Registro de novo curso");
             Console.Write("Nome do curso: ");
             string name = Console.ReadLine().Trim();
+            Console.Write("Total de horas do curso: ");
+            int totalHours = int.Parse(Console.ReadLine());
 
             var existing = CourseDAL.ReadBy(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
@@ -74,7 +76,7 @@ internal class Program
             }
             else
             {
-                Course c = new Course(name);
+                Course c = new Course(name, totalHours);
                 CourseDAL.Create(c);
                 Console.WriteLine($"Curso '{name}' registrado com sucesso!");
             }
@@ -94,7 +96,11 @@ internal class Program
             {
                 Console.Write("Nome da disciplina: ");
                 string subjectName = Console.ReadLine();
-                targetCourse.AddSubject(new Subject(subjectName));
+                int credits = int.Parse(Console.ReadLine());
+                int semester = int.Parse(Console.ReadLine());
+                int courseId = int.Parse(Console.ReadLine());
+
+                targetCourse.AddSubject(new Subject(subjectName, credits, semester, courseId));
                 CourseDAL.Update(targetCourse);
                 Console.WriteLine($"Disciplina '{subjectName}' adicionada ao curso '{courseName}'.");
             }
@@ -118,7 +124,9 @@ internal class Program
             {
                 Console.Write("Nome do professor: ");
                 string professorName = Console.ReadLine();
-                Professor newProfessor = new(professorName);
+                string email = Console.ReadLine();
+                string phoneNumber = Console.ReadLine();
+                Professor newProfessor = new(professorName, email, phoneNumber);
 
                 targetCourse.AddProfessor(newProfessor);
                 newProfessor.AddCourse(targetCourse);

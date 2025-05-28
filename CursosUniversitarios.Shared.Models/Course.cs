@@ -22,11 +22,6 @@ namespace CursosUniversitarios_Console
             TotalHours = totalHours;
         }
 
-        public Course(string name)
-        {
-            Name = name;
-        }
-
         public void AddSubject(Subject subject)
         {
             Subjects.Add(subject);
