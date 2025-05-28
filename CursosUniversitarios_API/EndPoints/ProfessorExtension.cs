@@ -10,32 +10,42 @@ namespace CursosUniversitarios_API.EndPoints
     {
         public static void AddEndpointsProfessor(this WebApplication app)
         {
-            app.MapGet("/Professor", ([FromServices] DAL<Professor> dal) =>
-            {
-                var ProfessorList = dal.Read();
+            var groupBuilder = app.MapGroup("Professor")
+                .WithTags("Professores")
+                .RequireAuthorization();
 
-                if (ProfessorList is null)
+            groupBuilder.MapGet("", ([FromServices] DAL<Professor> dal) =>
+            {
+                var professorList = dal.Read();
+
+                if (professorList is null)
                 {
                     return Results.NotFound();
                 }
 
-                var ProfessorResponseList = EntityListToResponseList(ProfessorList);
-                return Results.Ok(ProfessorResponseList);
+                var professorResponseList = EntityListToResponseList(professorList);
+                return Results.Ok(professorResponseList);
             });
 
-            app.MapPost("/Professor", ([FromServices] DAL<Professor> dal, [FromServices] DAL<Course> courseDal, [FromBody] ProfessorRequest professor) =>
+            groupBuilder.MapGet("/{id}", (int id, [FromServices] DAL<Professor> dal) =>
             {
-                var newProfessor = new Professor(professor.name, professor.email, professor.phoneNumber);
-                var courses = courseDal.Read().Where(c => professor.courseIds.Contains(c.Id)).ToList();
+                var crs = dal.ReadBy(c => c.Id == id);
 
-                newProfessor.Courses = courses;
+                if (crs is null)
+                {
+                    return Results.NotFound();
+                }
 
-                dal.Create(newProfessor);
+                return Results.Ok(EntityToResponse(crs));
+            });
 
+            groupBuilder.MapPost("", ([FromServices] DAL<Professor> dal, [FromBody] ProfessorRequest professor) =>
+            {
+                dal.Create(RequestoToEntity(professor));
                 return Results.NoContent();
             });
 
-            app.MapDelete("/Professor/{id}", ([FromServices] DAL<Professor> dal, int id) =>
+            groupBuilder.MapDelete("/{id}", ([FromServices] DAL<Professor> dal, int id) =>
             {
                 var professor = dal.ReadBy(c => c.Id == id);
 
@@ -48,7 +58,7 @@ namespace CursosUniversitarios_API.EndPoints
                 return Results.NoContent();
             });
 
-            app.MapPut("/Professor", ([FromServices] DAL<Professor> dal, [FromServices] DAL < Course > dalCourse, [FromBody] ProfessorEditRequest professor) =>
+            groupBuilder.MapPut("", ([FromServices] DAL<Professor> dal, [FromBody] ProfessorEditRequest professor) =>
             {
                 var professorToEdit = dal.ReadBy(c => c.Id == professor.id);
 
@@ -61,12 +71,14 @@ namespace CursosUniversitarios_API.EndPoints
                 professorToEdit.Email = professor.email;
                 professorToEdit.PhoneNumber = professor.phoneNumber;
 
-                var courses = dalCourse.Read().Where(c => professor.courseIds.Contains(c.Id)).ToList();
-                professorToEdit.Courses = courses;
-
                 dal.Update(professorToEdit);
                 return Results.Created();
             });
+        }
+
+        private static Professor RequestoToEntity(ProfessorRequest professor)
+        {
+            return new Professor(professor.name, professor.email, professor.phoneNumber);
         }
 
         private static ICollection<ProfessorResponse> EntityListToResponseList(IEnumerable<Professor> entities)
@@ -76,14 +88,7 @@ namespace CursosUniversitarios_API.EndPoints
 
         private static ProfessorResponse EntityToResponse(Professor entity)
         {
-            var courses = entity.Courses.Select(c => new CourseResponse(c.Id, c.Name, c.TotalHours)).ToList();
-
-            return new ProfessorResponse(
-                entity.Id,
-                entity.Name,
-                entity.Email,
-                entity.PhoneNumber,
-                courses);
+            return new ProfessorResponse(entity.Id, entity.Name, entity.Email, entity.PhoneNumber);
         }
     }
 }

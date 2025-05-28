@@ -10,7 +10,11 @@ namespace CursosUniversitarios_API.EndPoints
     {
         public static void AddEndpointsCourse(this WebApplication app)
         {
-            app.MapGet("/Course", ([FromServices] DAL<Course> dal) =>
+            var groupBuilder = app.MapGroup("Course")
+                .WithTags("Cursos")
+                .RequireAuthorization();
+
+            groupBuilder.MapGet("", ([FromServices] DAL<Course> dal) =>
             {
                 var courseList = dal.Read();
 
@@ -23,13 +27,30 @@ namespace CursosUniversitarios_API.EndPoints
                 return Results.Ok(courseResponseList);
             });
 
-            app.MapPost("/Course", ([FromServices] DAL<Course> dal, [FromBody] CourseRequest crs) =>
+            groupBuilder.MapGet("/{id}", (int id, [FromServices] DAL<Course> dal) =>
             {
-                dal.Create(new Course(crs.Name, crs.TotalHours));
+                var crs = dal.ReadBy(c => c.Id == id);
+
+                if (crs is null)
+                {
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(EntityToResponse(crs));
+            });
+
+            groupBuilder.MapPost("", ([FromServices] DAL<Course> dal, [FromServices] DAL<Professor> profDal, [FromBody] CourseRequest crs) =>
+            {
+                dal.Create(new Course(crs.name, crs.totalHours)
+                {
+                    Professors = crs.professors is not null ?
+                    ProfessorRequestCovert(crs.professors, profDal) : new List<Professor>()
+                }
+                );
                 return Results.NoContent();
             });
 
-            app.MapDelete("/Course/{id}", ([FromServices] DAL<Course> dal, int id) =>
+            groupBuilder.MapDelete("/{id}", ([FromServices] DAL<Course> dal, int id) =>
             {
                 var crs = dal.ReadBy(c => c.Id == id);
 
@@ -42,7 +63,7 @@ namespace CursosUniversitarios_API.EndPoints
                 return Results.NoContent();
             });
 
-            app.MapPut("/Course", ([FromServices] DAL<Course> dal, [FromBody] CourseEditRequest crs) =>
+            groupBuilder.MapPut("", ([FromServices] DAL<Course> dal, [FromBody] CourseEditRequest crs) =>
             {
                 var crsToEdit = dal.ReadBy(c => c.Id == crs.id);
 
@@ -57,6 +78,35 @@ namespace CursosUniversitarios_API.EndPoints
                 dal.Update(crsToEdit);
                 return Results.Created();
             });
+        }
+
+        private static List<Professor> ProfessorRequestCovert(ICollection<ProfessorRequest> professorsList, DAL<Professor> profDal)
+        {
+            var profList = new List<Professor>();
+
+            foreach (var item in professorsList)
+            {
+                var prof = RequestToEntity(item);
+                var profBuscado = profDal.ReadBy(p => p.Name.ToUpper().Equals(prof.Name.ToUpper()));
+
+                if (profBuscado is not null)
+                {
+                    profList.Add(profBuscado);
+                }
+                else
+                {
+                    profDal.Create(prof);
+                    profList.Add(prof);
+                }
+
+            }
+
+            return profList;
+        }
+
+        private static Professor RequestToEntity(ProfessorRequest p)
+        {
+            return new Professor(p.name, p.email, p.phoneNumber);
         }
 
         private static ICollection<CourseResponse> EntityListToResponseList(IEnumerable<Course> entities)

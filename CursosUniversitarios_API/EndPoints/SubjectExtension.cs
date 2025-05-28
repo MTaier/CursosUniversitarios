@@ -11,7 +11,11 @@ namespace CursosUniversitarios_API.EndPoints
     {
         public static void AddEndpointsSubject(this WebApplication app)
         {
-            app.MapGet("/Subject", ([FromServices] DAL<Subject> dal) =>
+            var groupBuilder = app.MapGroup("Subject")
+                .WithTags("Disciplinas")
+                .RequireAuthorization();
+
+            groupBuilder.MapGet("", ([FromServices] DAL<Subject> dal) =>
             {
                 var subjectList = dal.Read();
 
@@ -24,13 +28,25 @@ namespace CursosUniversitarios_API.EndPoints
                 return Results.Ok(subjectResponseList);
             });
 
-            app.MapPost("/Subject", ([FromServices] DAL<Subject> dal, [FromBody] SubjectRequest subject) =>
+            groupBuilder.MapGet("/{id}", (int id, [FromServices] DAL<Subject> dal) =>
+            {
+                var subject = dal.ReadBy(s => s.Id == id);
+
+                if (subject is null)
+                {
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(EntityToResponse(subject));
+            });
+
+            groupBuilder.MapPost("", ([FromServices] DAL<Subject> dal, [FromBody] SubjectRequest subject) =>
             {
                 dal.Create(new Subject(subject.name, subject.credits, subject.semester, subject.courseId));
                 return Results.NoContent();
             });
 
-            app.MapDelete("/Subject/{id}", ([FromServices] DAL<Subject> dal, int id) =>
+            groupBuilder.MapDelete("/{id}", ([FromServices] DAL<Subject> dal, int id) =>
             {
                 var sbjct = dal.ReadBy(s => s.Id == id);
 
@@ -43,7 +59,7 @@ namespace CursosUniversitarios_API.EndPoints
                 return Results.NoContent();
             });
 
-            app.MapPut("/Subject", ([FromServices] DAL<Subject> dal, [FromBody] SubjectEditRequest subject) =>
+            groupBuilder.MapPut("", ([FromServices] DAL<Subject> dal, [FromBody] SubjectEditRequest subject) =>
             {
                 var subjectToEdit = dal.ReadBy(s => s.Id == subject.id);
 
@@ -70,10 +86,10 @@ namespace CursosUniversitarios_API.EndPoints
         private static SubjectResponse EntityToResponse(Subject entity)
         {
             return new SubjectResponse(
-                entity.Id, 
-                entity.Name, 
-                entity.Course?.Id?? 0, 
-                entity.Course?.Name?? "No course");
+                entity.Id,
+                entity.Name,
+                entity.Course?.Id ?? 0,
+                entity.Course?.Name ?? "No course");
         }
     }
 }

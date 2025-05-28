@@ -1,6 +1,8 @@
 using CursosUniversitarios.Shared.Data.DB;
+using CursosUniversitarios.Shared.Data.Models;
 using CursosUniversitarios_API.EndPoints;
 using CursosUniversitarios_Console;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
@@ -17,11 +19,25 @@ internal class Program
         builder.Services.AddTransient<DAL<Professor>>();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddIdentityApiEndpoints<AccessUser>().AddEntityFrameworkStores<CursosUniversitariosContext>();
+        builder.Services.AddAuthorization();
 
         var app = builder.Build();
+
+        app.UseAuthorization();
+
+        app.MapGroup("auth").MapIdentityApi<AccessUser>().WithTags("Authorization");
+
+        app.MapPost("auth/logout", async ([FromServices] SignInManager<AccessUser> manager) =>
+        {
+            await manager.SignOutAsync();
+            return Results.Ok();
+        }).RequireAuthorization().WithTags("Authorization");
+
         app.AddEndpointsCourse();
         app.AddEndpointsSubject();
         app.AddEndpointsProfessor();
+
         app.UseSwagger();
         app.UseSwaggerUI();
         

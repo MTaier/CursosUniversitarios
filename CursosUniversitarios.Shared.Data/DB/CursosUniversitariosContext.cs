@@ -1,4 +1,6 @@
-﻿using CursosUniversitarios_Console;
+﻿using CursosUniversitarios.Shared.Data.Models;
+using CursosUniversitarios_Console;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CursosUniversitarios.Shared.Data.DB
 {
-    public class CursosUniversitariosContext : DbContext
+    public class CursosUniversitariosContext : IdentityDbContext<AccessUser, AccessRole, int>
     {
         public DbSet<Course> Course { get; set; }
         public DbSet<Subject> Subject { get; set; }
@@ -19,6 +21,12 @@ namespace CursosUniversitarios.Shared.Data.DB
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(connectionString).UseLazyLoadingProxies();
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Course>().HasMany(c => c.Professors).WithMany(p => p.Courses);
         }
     }
 }
