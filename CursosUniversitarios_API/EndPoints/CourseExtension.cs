@@ -36,7 +36,7 @@ namespace CursosUniversitarios_API.EndPoints
                     return Results.NotFound();
                 }
 
-                return Results.Ok(EntityToResponse(crs));
+                return Results.Ok(EntityToDetailedResponse(crs));
             });
 
             groupBuilder.MapPost("", ([FromServices] DAL<Course> dal, [FromServices] DAL<Professor> profDal, [FromBody] CourseRequest crs) =>
@@ -44,7 +44,7 @@ namespace CursosUniversitarios_API.EndPoints
                 dal.Create(new Course(crs.name, crs.totalHours)
                 {
                     Professors = crs.professors is not null ?
-                    ProfessorRequestCovert(crs.professors, profDal) : new List<Professor>()
+                    ProfessorRequestConvert(crs.professors, profDal) : new List<Professor>()
                 }
                 );
                 return Results.NoContent();
@@ -80,14 +80,23 @@ namespace CursosUniversitarios_API.EndPoints
             });
         }
 
-        private static List<Professor> ProfessorRequestCovert(ICollection<ProfessorRequest> professorsList, DAL<Professor> profDal)
+        private static object? EntityToDetailedResponse(Course entity)
+        {
+            return new CourseResponseById(
+                entity.Name,
+                entity.TotalHours.ToString(),
+                entity.Subjects.Select(s => new SubjectRequest(s.Name, s.Credits, s.Semester, s.CourseId)).ToList(),
+                entity.Professors.Select(p => new ProfessorRequest(p.Name, p.Email, p.PhoneNumber)).ToList()
+            );
+        }
+
+        private static List<Professor> ProfessorRequestConvert(ICollection<ProfessorRequest> professorsList, DAL<Professor> profDal)
         {
             var profList = new List<Professor>();
 
             foreach (var item in professorsList)
             {
-                var prof = RequestToEntity(item);
-                var profBuscado = profDal.ReadBy(p => p.Name.ToUpper().Equals(prof.Name.ToUpper()));
+                var profBuscado = profDal.ReadBy(p => p.Email.ToLower() == item.email.ToLower());
 
                 if (profBuscado is not null)
                 {
@@ -95,10 +104,9 @@ namespace CursosUniversitarios_API.EndPoints
                 }
                 else
                 {
-                    profDal.Create(prof);
+                    var prof = new Professor(item.name, item.email, item.phoneNumber);
                     profList.Add(prof);
                 }
-
             }
 
             return profList;

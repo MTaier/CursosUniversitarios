@@ -10,9 +10,9 @@ namespace CursosUniversitarios.Shared.Data.DB
     {
         private readonly CursosUniversitariosContext context;
 
-        public DAL()
+        public DAL(CursosUniversitariosContext context)
         {
-            context = new CursosUniversitariosContext();
+            this.context = context;
         }
 
         public void Create(T value)

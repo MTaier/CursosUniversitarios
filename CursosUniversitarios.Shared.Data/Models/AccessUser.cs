@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 namespace CursosUniversitarios.Shared.Data.Models
 {
     public class AccessUser : IdentityUser<int>
-    { 
+    {
     }
 }

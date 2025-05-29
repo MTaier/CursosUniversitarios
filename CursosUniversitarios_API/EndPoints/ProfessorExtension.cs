@@ -29,19 +29,44 @@ namespace CursosUniversitarios_API.EndPoints
 
             groupBuilder.MapGet("/{id}", (int id, [FromServices] DAL<Professor> dal) =>
             {
-                var crs = dal.ReadBy(c => c.Id == id);
+                var prof = dal.ReadBy(p => p.Id == id);
 
-                if (crs is null)
+                if (prof is null)
                 {
                     return Results.NotFound();
                 }
 
-                return Results.Ok(EntityToResponse(crs));
+                return Results.Ok(EntityToResponse(prof));
             });
 
-            groupBuilder.MapPost("", ([FromServices] DAL<Professor> dal, [FromBody] ProfessorRequest professor) =>
+            groupBuilder.MapGet("{id}/Course", ([FromServices] DAL<Professor> dal, int id) =>
             {
-                dal.Create(RequestoToEntity(professor));
+                var prof = dal.ReadBy(p => p.Id == id);
+
+                if (prof is null)
+                {
+                    return Results.NotFound();
+                }
+
+                var response = new
+                {
+                    professor = prof.Name,
+                    cursos = prof.Courses.Select(c => c.Name).ToList()
+                };
+
+                return Results.Ok(response);
+            });
+
+            groupBuilder.MapPost("", ([FromServices] DAL<Professor> dal, [FromServices] DAL<Course> courseDal, [FromBody] ProfessorRequest professor) =>
+            {
+                var professorEntity = new Professor(professor.name, professor.email, professor.phoneNumber)
+                {
+                    Courses = professor.courses is not null
+                        ? CourseRequestConvert(professor.courses, courseDal)
+                        : new List<Course>()
+                };
+
+                dal.Create(professorEntity);
                 return Results.NoContent();
             });
 
@@ -74,6 +99,28 @@ namespace CursosUniversitarios_API.EndPoints
                 dal.Update(professorToEdit);
                 return Results.Created();
             });
+        }
+
+        private static List<Course> CourseRequestConvert(ICollection<CourseReferenceRequest> courseRequests, DAL<Course> courseDal)
+        {
+            var existingCourses = courseDal.Read().ToList();
+            var courseList = new List<Course>();
+
+            foreach (var courseReq in courseRequests)
+            {
+                var existing = existingCourses.FirstOrDefault(c => c.Name.ToUpper() == courseReq.name.ToUpper());
+
+                if (existing is not null)
+                {
+                    courseList.Add(existing);
+                }
+                else
+                {
+                    courseList.Add(new Course(courseReq.name, 0));
+                }
+            }
+
+            return courseList;
         }
 
         private static Professor RequestoToEntity(ProfessorRequest professor)
